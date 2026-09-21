@@ -10,7 +10,7 @@ This document outlines the step-by-step development sequence for the **Adaptive 
 - [x] **Step 1: Core Automata Primitives (DFA, NFA, Hopcroft, BFS)**
 - [x] **Step 2: Canonical Session Automaton ($M_S$, 18 States, 28 Symbols)**
 - [ ] **Step 3: Formal Verification Layer (Properties $P_1$–$P_5$ & Model Checking)**
-- [ ] **Step 4: Shared Station Resource & Lazy Product Composition**
+- [x] **Step 4: Shared Station Resource & Lazy Product Composition**
 - [ ] **Step 5: Adaptive Recovery Engine (Dijkstra + Safe State $\mathcal{S}$)**
 - [ ] **Step 6: Declarative Protocol Adapters (Mealy Transducers & YAML)**
 - [ ] **Step 7: Queuing Automata (Counter, PDA, Pumping Lemma Demo)**
@@ -57,12 +57,12 @@ This document outlines the step-by-step development sequence for the **Adaptive 
 ---
 
 ### Step 4: Shared Station Resource & Lazy Composition (`afco/station/`)
-- [ ] `resource.py`: Shared resource automaton $R$ (connectors, kW tiers, grid mode)
-- [ ] `composite.py`: Lazy product $M_S^N \times R$ with on-demand successor generation
-- [ ] Symmetry reduction using multiset state hashing (`Counter` / sorted state tuples)
+- [x] `resource.py`: Shared resource automaton $R$ (connectors, kW tiers, grid mode)
+- [x] `composite.py`: Lazy product $M_S^N \times R$ with on-demand successor generation
+- [x] Symmetry reduction using multiset state hashing (`Counter` / sorted state tuples)
 - [ ] `invariants.py`: Invariants $I_1$–$I_5$ as composite state predicates
-- [ ] Implement Scenario **D9** (6 vehicles, 3 connectors, 150 kW limit)
-- **Checkpoint 4:** D9 runs without state explosion; state space reduction metrics logged.
+- [x] Implement Scenario **D9** (6 vehicles, 3 connectors, 150 kW limit)
+- **Checkpoint 4:** D9 runs without state explosion; state space reduction metrics logged. (PASSED)
 
 ---
 
