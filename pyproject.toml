@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "afco"
+version = "0.1.0"
+description = "Adaptive FSM-Based Fleet Charging Orchestrator"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "AFCO Team" }
+]
+dependencies = [
+    "pyyaml>=6.0.1",
+    "graphviz>=0.20.1",
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0",
+    "pydantic>=2.6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "hypothesis>=6.98.0",
+    "pytest-cov>=4.1.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
