@@ -8,7 +8,7 @@ This document outlines the step-by-step development sequence for the **Adaptive 
 
 - [x] **Step 0: Skeleton & Dependencies**
 - [x] **Step 1: Core Automata Primitives (DFA, NFA, Hopcroft, BFS)**
-- [ ] **Step 2: Canonical Session Automaton ($M_S$, 18 States, 28 Symbols)**
+- [x] **Step 2: Canonical Session Automaton ($M_S$, 18 States, 28 Symbols)**
 - [ ] **Step 3: Formal Verification Layer (Properties $P_1$–$P_5$ & Model Checking)**
 - [ ] **Step 4: Shared Station Resource & Lazy Product Composition**
 - [ ] **Step 5: Adaptive Recovery Engine (Dijkstra + Safe State $\mathcal{S}$)**
@@ -38,12 +38,12 @@ This document outlines the step-by-step development sequence for the **Adaptive 
 ---
 
 ### Step 2: Canonical Session Automaton ($M_S$) (`afco/session/`)
-- [ ] `alphabet.py`: 28 formal symbols and 18 lifecycle states ($Q_S$)
-- [ ] `canonical.py`: Complete transition table $\delta_S$
-- [ ] Verify structural reachability (0 unreachables, `FAULT_TERMINAL` as only trap)
-- [ ] `instance.py`: Session runtime instance and history tracking
-- [ ] Implement Scenarios **D1** (Happy Path) and **D2** (Billing-Skip Rejection)
-- **Checkpoint 2:** D1 accepts; D2 rejects with exact failure index, admissible symbols, and repair path.
+- [x] `alphabet.py`: 28 formal symbols and 18 lifecycle states ($Q_S$)
+- [x] `canonical.py`: Complete transition table $\delta_S$
+- [x] Verify structural reachability (0 unreachables, `FAULT_TERMINAL` as only trap)
+- [x] `instance.py`: Session runtime instance and history tracking
+- [x] Implement Scenarios **D1** (Happy Path) and **D2** (Billing-Skip Rejection)
+- **Checkpoint 2:** D1 accepts; D2 rejects with exact failure index, admissible symbols, and repair path. (PASSED - 13/13 tests)
 
 ---
 

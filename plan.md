@@ -167,7 +167,7 @@ To guarantee rigorous execution and eliminate scope drift, the project is broken
 |---|---|---|---|---|
 | **Step 0** | **Skeleton & Dependencies** | `pyproject.toml`, `requirements.txt`, `README.md`, package structure. | Test discovery succeeds via `pytest`. | **COMPLETED** |
 | **Step 1** | **Core Automata Primitives** | `dfa.py`, `nfa.py`, `subset.py`, `reachability.py`, `minimize.py`, `product.py`, `transducer.py`, `render.py`. | 4 textbook DFAs pass; `hypothesis` confirms minimization preserves language. (12/12 tests) | **COMPLETED** |
-| **Step 2** | **Session Automaton ($M_S$)** | 18 states, 28 symbols, full $\delta_S$ table, session instance tracking. | Scenarios **D1** (Happy Path) and **D2** (Billing-Skip Rejection) pass. | *Pending* |
+| **Step 2** | **Session Automaton ($M_S$)** | 18 states, 28 symbols, full $\delta_S$ table, session instance tracking. | Scenarios **D1** (Happy Path) and **D2** (Billing-Skip Rejection) pass. | **COMPLETED** |
 | **Step 3** | **Verification Layer** | Safety properties $P_1$–$P_5$ as forbidden DFAs, product emptiness check, counterexample extraction. | Scenario **D3** (Unlock while charging caught via $P_2$) passes. | *Pending* |
 | **Step 4** | **Station Composition** | Shared resource $R$, lazy product $M_S^N \times R$, multiset symmetry reduction, invariants $I_1$–$I_5$. | Scenario **D9** (6 bays / 3 connectors / power cap) passes without state explosion. | *Pending* |
 | **Step 5** | **Recovery Engine** | Safe state set $\mathcal{S}$, domain cost model, Dijkstra shortest path $\rho$, verification gate. | Scenarios **D4**–**D8** pass; hostile bypass (D8) rejected. | *Pending* |
@@ -182,13 +182,13 @@ To guarantee rigorous execution and eliminate scope drift, the project is broken
 ### Phase 0 — Mathematical Foundations (Week 1 / Steps 0 & 1)
 **Goal:** Pure automata algorithms library, fully tested against standard theory benchmarks before any charging logic is introduced.
 
-- [ ] Implement `DFA` class: states $Q$, alphabet $\Sigma$, transition table $\delta: Q \times \Sigma \to Q$, initial state $q_0$, accepting states $F$.
-- [ ] Implement `accepts(word)` and `trace(word)`:
+- [x] Implement `DFA` class: states $Q$, alphabet $\Sigma$, transition table $\delta: Q \times \Sigma \to Q$, initial state $q_0$, accepting states $F$.
+- [x] Implement `accepts(word)` and `trace(word)`:
   - `trace()` must return the full sequence of visited states and, upon rejection, the exact failure index $i$, the rejected symbol $w[i]$, and the set of admissible symbols $\text{Admissible}(q) = \{a \in \Sigma \mid \delta(q, a) \text{ is defined}\}$.
-- [ ] Implement `NFA` with $\epsilon$-transitions and $\epsilon$-closure computation.
-- [ ] Implement Subset Construction (powerset determinization) with canonical frozenset state naming for traceability.
-- [ ] Implement Forward Reachability from $q_0$ (unreachable state detection) and Backward Reachability from $F$ (trap / dead-end state detection).
-- [ ] Implement Hopcroft Minimization ($O(|\Sigma| \cdot |Q| \log |Q|)$ partition refinement).
+- [x] Implement `NFA` with $\epsilon$-transitions and $\epsilon$-closure computation.
+- [x] Implement Subset Construction (powerset determinization) with canonical frozenset state naming for traceability.
+- [x] Implement Forward Reachability from $q_0$ (unreachable state detection) and Backward Reachability from $F$ (trap / dead-end state detection).
+- [x] Implement Hopcroft Minimization ($O(|\Sigma| \cdot |Q| \log |Q|)$ partition refinement).
 
 > [!IMPORTANT]
 > **Hopcroft with Partial Transition Functions:**
@@ -197,7 +197,7 @@ To guarantee rigorous execution and eliminate scope drift, the project is broken
 > 2. Execute standard Hopcroft partition refinement.
 > 3. Prune the block containing $q_{sink}$ and all transitions targeting it from the resulting quotient automaton.
 
-- [ ] Implement Graphviz exporter generating clean `.dot` and `.svg` diagrams.
+- [x] Implement Graphviz exporter generating clean `.dot` and `.svg` diagrams.
 
 **Exit Criterion (M1):** The library correctly reproduces minimized states for 4 textbook DFAs from Hopcroft, Motwani & Ullman (e.g., matching $(a|b)^*abb$, mod-3 binary counters, and known equivalent state pairs).
 
@@ -206,15 +206,15 @@ To guarantee rigorous execution and eliminate scope drift, the project is broken
 ### Phase 1 — The Session Automaton (Week 2)
 **Goal:** Encode and formally validate the 18-state canonical session automaton $M_S$.
 
-- [ ] Encode $M_S$ based on the formal state taxonomy (see [Section 14](#14-canonical-session-automaton-m_s-specification)): 18 states, 28 symbols, and the complete transition table.
-- [ ] Verify structural soundness:
+- [x] Encode $M_S$ based on the formal state taxonomy (see [Section 14](#14-canonical-session-automaton-m_s-specification)): 18 states, 28 symbols, and the complete transition table.
+- [x] Verify structural soundness:
   - Assert zero unreachable states from `IDLE`.
   - Assert that the backward reachability check finds `FAULT_TERMINAL` as the only dead-end trap state.
-- [ ] Implement dynamic admissibility query: $\text{admissible}(q) = \{a \in \Sigma \mid \delta(q, a) \ne \bot\}$ computed strictly from $\delta$.
-- [ ] Compute the minimal DFA for $M_S$ via Hopcroft; document the Myhill–Nerode equivalence classes explaining any collapsed states.
-- [ ] Implement Scenario **D1** (Canonical Happy Path) and Scenario **D2** (Billing-Skip Rejection).
+- [x] Implement dynamic admissibility query: $\text{admissible}(q) = \{a \in \Sigma \mid \delta(q, a) \ne \bot\}$ computed strictly from $\delta$.
+- [x] Compute the minimal DFA for $M_S$ via Hopcroft; document the Myhill–Nerode equivalence classes explaining any collapsed states.
+- [x] Implement Scenario **D1** (Canonical Happy Path) and Scenario **D2** (Billing-Skip Rejection).
 
-**Exit Criterion (M2):** Running D2 on the input word with an unbilled premature departure outputs the failure index, admissible symbols at the point of rejection, and the synthesized repair sequence without raising unhandled exceptions.
+**Exit Criterion (M2):** Running D2 on the input word with an unbilled premature departure outputs the failure index, admissible symbols at the point of rejection, and the synthesized repair sequence without raising unhandled exceptions. (PASSED)
 
 ---
 
