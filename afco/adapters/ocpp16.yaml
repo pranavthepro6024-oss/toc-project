@@ -1,0 +1,21 @@
+adapter:
+  vendor: OCPP-1.6J
+  version: "1.0"
+  initial_state: Available
+states: [Available, Preparing, Charging, Finishing, Billing]
+transitions:
+  - {from: Available, event: Authorize, to: Preparing, emit: auth_req}
+  - {from: Preparing, event: AuthorizationAccepted, to: Preparing, emit: auth_ok}
+  - {from: Preparing, event: CablePlugged, to: Preparing, emit: plug_in}
+  - {from: Preparing, event: CableLocked, to: Preparing, emit: lock_ok}
+  - {from: Preparing, event: EvReady, to: Preparing, emit: ev_ready}
+  - {from: Preparing, event: PrechargeComplete, to: Charging, emit: precharge_ok}
+  - {from: Charging, event: StartTransaction, to: Charging, emit: power_start}
+  - {from: Charging, event: MeterValues, to: Charging, emit: meter_tick}
+  - {from: Charging, event: StopTransaction, to: Finishing, emit: power_ramp_down}
+  - {from: Finishing, event: PowerStopped, to: Finishing, emit: power_stop}
+  - {from: Finishing, event: ContactorsOpen, to: Billing, emit: contactors_open}
+  - {from: Billing, event: Unplugged, to: Billing, emit: unplug}
+  - {from: Billing, event: MeterFinal, to: Billing, emit: meter_final}
+  - {from: Billing, event: PaymentAccepted, to: Available, emit: pay_ok}
+  - {from: Available, event: SessionClosed, to: Available, emit: session_close}

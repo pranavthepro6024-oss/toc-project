@@ -12,9 +12,10 @@ This document outlines the step-by-step development sequence for the **Adaptive 
 - [ ] **Step 3: Formal Verification Layer (Properties $P_1$–$P_5$ & Model Checking)**
 - [x] **Step 4: Shared Station Resource & Lazy Product Composition**
 - [ ] **Step 5: Adaptive Recovery Engine (Dijkstra + Safe State $\mathcal{S}$)**
-- [ ] **Step 6: Declarative Protocol Adapters (Mealy Transducers & YAML)**
-- [ ] **Step 7: Queuing Automata (Counter, PDA, Pumping Lemma Demo)**
-- [ ] **Step 8: Simulation Engine, Live UI & Soundness Fuzzing**
+- [x] **Step 6: Declarative Protocol Adapters (Mealy Transducers & YAML)**
+- [x] **Step 7: Queuing Automata (Counter, PDA, Pumping Lemma Demo)**
+- [x] **Step 8: Simulation Engine, Live UI & Soundness Fuzzing**
+- [x] **Step 9: Synthesis, Reproducible Report & Patent Audit**
 
 ---
 
@@ -103,3 +104,11 @@ This document outlines the step-by-step development sequence for the **Adaptive 
 - [ ] Implement Scenario **D13** (Full fleet stress test executable via UI)
 - [ ] Automated generation of report metrics, tables, and figures
 - **Checkpoint 8:** Web dashboard runs D1–D13 live; fuzz test confirms 100% soundness.
+---
+
+### Step 9: Synthesis, Reproducible Report & Patent Audit (`afco/report/`)
+- [x] `generate.py`: execute D3, D9, D13, and soundness fuzzing to produce a machine-readable evidence bundle
+- [x] Generate Markdown metrics and a deterministic timeout-and-reboot baseline comparison
+- [x] Audit independent patent claims against concrete modules and automated tests
+- [x] Add CLI output options for JSON and Markdown artifacts
+- **Checkpoint 9:** The report generator runs from the repository, emits zero-false-accept evidence, and fails if claim evidence paths are missing. (PASSED)

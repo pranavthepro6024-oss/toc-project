@@ -1,0 +1,20 @@
+adapter:
+  vendor: CHAdeMO
+  version: "1.0"
+  initial_state: Idle
+states: [Idle, Connected, Charging, Stopping, Billing]
+transitions:
+  - {from: Idle, event: VehicleDetected, to: Connected, emit: plug_in}
+  - {from: Connected, event: AuthorizationAccepted, to: Connected, emit: auth_ok}
+  - {from: Connected, event: ConnectorLocked, to: Connected, emit: lock_ok}
+  - {from: Connected, event: Ready, to: Connected, emit: ev_ready}
+  - {from: Connected, event: VoltageMatched, to: Charging, emit: precharge_ok}
+  - {from: Charging, event: CurrentEnabled, to: Charging, emit: power_start}
+  - {from: Charging, event: PeriodicMeter, to: Charging, emit: meter_tick}
+  - {from: Charging, event: StopRequest, to: Stopping, emit: power_ramp_down}
+  - {from: Stopping, event: CurrentZero, to: Stopping, emit: power_stop}
+  - {from: Stopping, event: ContactorsOpen, to: Stopping, emit: contactors_open}
+  - {from: Stopping, event: UnlockComplete, to: Stopping, emit: unlock_ok}
+  - {from: Stopping, event: CableRemoved, to: Billing, emit: unplug}
+  - {from: Billing, event: MeterFinal, to: Billing, emit: meter_final}
+  - {from: Billing, event: PaymentOk, to: Idle, emit: pay_ok}

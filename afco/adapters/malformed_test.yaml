@@ -1,0 +1,9 @@
+adapter:
+  vendor: BrokenVendor
+  version: "0.0"
+  initial_state: Available
+states: [Available, Charging]
+transitions:
+  - {from: Available, event: Start, to: Charging, emit: not_a_canonical_symbol}
+  # Missing emit is intentionally rejected by the loader's totality check.
+  - {from: Charging, event: Stop, to: Available}
