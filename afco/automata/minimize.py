@@ -80,19 +80,18 @@ def minimize_dfa(dfa: DFA) -> DFA:
     if active_non_accepting:
         p_blocks.add(frozenset(active_non_accepting))
 
-    # Worklist W: initialize with smallest blocks among F and Q \ F
-    w_blocks: Set[FrozenSet[Any]] = set()
-    if active_non_accepting and len(active_accepting) <= len(active_non_accepting):
-        w_blocks.add(frozenset(active_accepting))
-    elif active_non_accepting:
-        w_blocks.add(frozenset(active_non_accepting))
-    else:
+    # Worklist W: initialize with sink_block and active_accepting blocks
+    # Including sink_block is critical for partial DFAs so that states with
+    # undefined transitions on symbol a are immediately distinguished from states
+    # with defined transitions to non-sink states on symbol a.
+    w_blocks: Set[FrozenSet[Any]] = {sink_block}
+    if active_accepting:
         w_blocks.add(frozenset(active_accepting))
 
     # Hopcroft refinement loop
     while w_blocks:
         A = w_blocks.pop()
-        for sym in dfa.alphabet:
+        for sym in sorted(dfa.alphabet, key=str):
             # X = set of all states that lead to a state in A on symbol sym
             X: Set[Any] = set()
             for target_state in A:

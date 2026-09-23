@@ -14,8 +14,9 @@ def test_resource_grid_modes_are_explicit():
     r = SharedResourceAutomaton(ResourceConfig(connectors=1, power_limit_kw=100, power_tiers=(0, 50, 100), curtailed_power_limit_kw=50))
     s = r.step(r.start_state, "connect")
     s = r.step(s, "power_start", 50)
-    assert r.step(s, "grid_curtail") == ResourceState(1, 50, GridMode.CURTAILED)
-    assert r.step(s, "power_start", 50) is None
+    curtailed = r.step(s, "grid_curtail")
+    assert curtailed == ResourceState(1, 50, GridMode.CURTAILED)
+    assert r.step(curtailed, "power_start", 50) is None
 
 
 def test_product_uses_sorted_multiset_state_and_lazy_successors():
@@ -42,7 +43,8 @@ def test_d9_six_sessions_three_connectors_and_power_cap():
         assert state is not None
     assert product.transition_state(state, "IDLE", "reserve_req") is not None
     # Connector allocation prevents the fourth physical connection.
-    fourth = product.transition_state(state, "RESERVED", "auth_req")
+    state_reserved = product.transition_state(state, "IDLE", "reserve_req")
+    fourth = product.transition_state(state_reserved, "RESERVED", "auth_req")
     fourth = product.transition_state(fourth, "AUTH_PENDING", "auth_ok")
     fourth = product.transition_state(fourth, "AUTHORIZED", "plug_in")
     assert fourth is None

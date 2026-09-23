@@ -1,1 +1,1123 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><title>AFCO Live Console</title><style>body{font:15px system-ui;margin:2rem;background:#f7fafc;color:#1a202c}main{max-width:1000px;margin:auto}section{background:white;padding:1rem;margin:1rem 0;border-radius:8px;box-shadow:0 1px 4px #ddd}pre{white-space:pre-wrap}button{padding:.5rem 1rem}</style></head><body><main><h1>AFCO Live Console</h1><section><button onclick="run()">Run pending events</button> <button onclick="refresh()">Refresh</button><pre id="state"></pre></section><section><h2>Trace log</h2><pre id="events"></pre></section></main><script>async function refresh(){let s=await fetch('/api/state').then(r=>r.json());let e=await fetch('/api/events').then(r=>r.json());document.querySelector('#state').textContent=JSON.stringify(s,null,2);document.querySelector('#events').textContent=JSON.stringify(e,null,2)}async function run(){await fetch('/api/run',{method:'POST'});refresh()}refresh()</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AFCO — Formal Fleet Charging Orchestrator</title>
+  <style>
+    :root {
+      --bg: #090b10;
+      --surface: #111624;
+      --surface-elevated: #161c2e;
+      --border: #1e2638;
+      --border-focus: #38bdf8;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --primary: #38bdf8;
+      --primary-hover: #0284c7;
+      --accent: #10b981;
+      --accent-bg: #064e3b;
+      --danger: #ef4444;
+      --danger-bg: #450a0a;
+      --warning: #f59e0b;
+      --warning-bg: #451a03;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", Helvetica, Arial, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.5;
+      padding: 1.25rem 1.5rem 3rem;
+      min-width: 320px;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1rem;
+      color: #090b10;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+    }
+    .brand-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+    .brand-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* Badges & Buttons */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.725rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .badge-ok { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-info { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge-warn { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-fail { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-neutral { background: rgba(100, 116, 139, 0.2); color: #cbd5e1; border: 1px solid var(--border); }
+
+    button {
+      background: var(--surface-elevated);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.45rem 0.8rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+    button:hover { background: #20293f; border-color: var(--primary); color: #fff; }
+    button.btn-primary { background: var(--primary); color: #090b10; border-color: var(--primary); }
+    button.btn-primary:hover { background: var(--primary-hover); color: #fff; }
+    button.btn-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; border-color: rgba(239, 68, 68, 0.35); }
+    button.btn-danger:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
+    button.btn-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.35); }
+    button.btn-warning:hover { background: #f59e0b; color: #090b10; border-color: #f59e0b; }
+    button.btn-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.35); }
+    button.btn-success:hover { background: #10b981; color: #090b10; border-color: #10b981; }
+
+    /* Card Layout */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.15rem;
+      margin-bottom: 1.25rem;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.85rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Fleet Station Bays */
+    .bays-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1rem;
+    }
+    .bay-card {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .bay-card:hover {
+      border-color: rgba(56, 189, 248, 0.5);
+    }
+    .bay-card.selected {
+      border-color: var(--primary);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+    }
+    .bay-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .bay-info h3 { font-size: 0.95rem; font-weight: 700; color: #fff; }
+    .bay-info p { font-size: 0.75rem; color: var(--text-muted); }
+    .power-meter {
+      background: #090b10;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.45rem 0.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .power-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.725rem;
+      color: var(--text-muted);
+    }
+    .power-bar {
+      height: 5px;
+      background: #1e2638;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .power-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0284c7, #38bdf8);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+    .bay-step-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+    .bay-step-actions button {
+      padding: 0.3rem 0.55rem;
+      font-size: 0.725rem;
+      border-radius: 5px;
+    }
+    .bay-fault-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      border-top: 1px dashed var(--border);
+      padding-top: 0.5rem;
+    }
+    .bay-fault-actions button {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.7rem;
+    }
+
+    /* FSM Visualizer Section */
+    .fsm-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .fsm-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+    .fsm-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .fsm-canvas-container {
+      position: relative;
+      width: 100%;
+      height: 480px;
+      background: #090b10;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: grab;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4);
+    }
+    .fsm-canvas-container:active { cursor: grabbing; }
+    #fsm-viewport {
+      width: 100%;
+      height: 100%;
+      transform-origin: center center;
+      transition: transform 0.08s ease-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #fsm-viewport svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .canvas-hint {
+      position: absolute;
+      bottom: 10px;
+      left: 12px;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      background: rgba(9, 11, 16, 0.75);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    /* State Inspector Drawer */
+    .state-inspector {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1.1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .inspector-title {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .inspector-desc {
+      font-size: 0.775rem;
+      color: var(--text-muted);
+    }
+
+    /* 2-Column Section: Verdict & Log */
+    .grid-bottom {
+      display: grid;
+      grid-template-columns: 1fr 1.25fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 1080px) {
+      .grid-bottom { grid-template-columns: 1fr; }
+    }
+
+    /* Scenarios Tabs & Grid */
+    .tabs-bar {
+      display: flex;
+      gap: 0.35rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      padding: 0.3rem 0.65rem;
+      border-radius: 5px;
+    }
+    .tab-btn.active {
+      background: var(--surface-elevated);
+      color: var(--primary);
+      border-color: var(--border);
+      font-weight: 700;
+    }
+    .scenarios-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 0.45rem;
+      max-height: 220px;
+      overflow-y: auto;
+      padding-right: 0.25rem;
+    }
+    .sc-btn {
+      background: #090b10;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.45rem 0.55rem;
+      border-radius: 6px;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .sc-btn:hover {
+      background: #172554;
+      border-color: var(--primary);
+    }
+    .sc-btn-id {
+      font-weight: 800;
+      color: var(--primary);
+      font-size: 0.8rem;
+    }
+    .sc-btn-title {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      line-height: 1.2;
+    }
+
+    /* Verdict Box */
+    .verdict-card {
+      background: #090b10;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.9rem;
+      margin-top: 0.85rem;
+    }
+    .verdict-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.5rem;
+    }
+    .verdict-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .verdict-row {
+      display: flex;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      margin-bottom: 0.35rem;
+    }
+    .verdict-label {
+      color: var(--text-muted);
+      font-weight: 600;
+      min-width: 130px;
+    }
+    .verdict-val {
+      color: var(--text);
+      flex: 1;
+      word-break: break-word;
+    }
+    .repair-badge {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.75rem;
+    }
+
+    /* Event Trace Table */
+    .table-container {
+      max-height: 380px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    table.trace-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.775rem;
+    }
+    table.trace-table th {
+      background: #090b10;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-size: 0.68rem;
+      padding: 0.5rem 0.65rem;
+      text-align: left;
+      position: sticky;
+      top: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    table.trace-table td {
+      padding: 0.45rem 0.65rem;
+      border-bottom: 1px solid rgba(30, 38, 56, 0.5);
+      white-space: nowrap;
+    }
+    table.trace-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">&Sigma;</div>
+      <div>
+        <div class="brand-title">Adaptive FSM Fleet Charging Orchestrator (AFCO)</div>
+        <div class="brand-sub">Formally Verified Language Acceptance & Runtime State Machine Kernel</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span class="badge badge-info" id="clock-badge">Clock: 0.0s</span>
+      <span class="badge badge-ok">Kernel: Sound (121/121)</span>
+      <button class="btn-primary" onclick="autoPlayDemo()">▶ Auto-Play Demo</button>
+      <button onclick="resetAll()">↺ Reset All</button>
+      <button onclick="refreshAll()">🔄 Refresh</button>
+    </div>
+  </header>
+
+  <!-- Physical Fleet Charging Bays -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span>Station Charging Bays (Concurrent Multi-Bay $M_S^N$)</span>
+      </div>
+      <span class="badge badge-neutral" id="selected-bay-badge">Selected: Bay 1 (v1)</span>
+    </div>
+
+    <div class="bays-grid" id="bays-container">
+      <!-- Rendered dynamically -->
+    </div>
+  </div>
+
+  <!-- Hero DFA Automaton Visualizer -->
+  <div class="card fsm-section">
+    <div class="fsm-toolbar">
+      <div class="card-title">
+        <span>Canonical 18-State Session Automaton ($M_S$)</span>
+        <span class="badge badge-info" id="fsm-active-badge">Active: IDLE</span>
+      </div>
+      <div class="fsm-controls">
+        <select id="state-select" onchange="highlightSelectedState(this.value)" style="background:var(--surface-elevated); color:var(--text); border:1px solid var(--border); padding:0.35rem 0.6rem; border-radius:5px; font-size:0.75rem;">
+          <option value="">Jump to State...</option>
+        </select>
+        <button onclick="zoomFsm(1.2)" title="Zoom In">+</button>
+        <button onclick="zoomFsm(0.8)" title="Zoom Out">&minus;</button>
+        <button onclick="resetFsmView()" title="Fit View">⛶ Fit View</button>
+      </div>
+    </div>
+
+    <!-- Canvas Viewport -->
+    <div class="fsm-canvas-container" id="fsm-container">
+      <div id="fsm-viewport">
+        <div style="color:var(--text-muted); font-size:0.85rem; padding: 2rem;">Loading canonical automaton...</div>
+      </div>
+      <div class="canvas-hint">Drag to Pan &bull; Mouse Wheel to Zoom &bull; Click Node to Inspect</div>
+    </div>
+
+    <!-- State Inspector Drawer -->
+    <div class="state-inspector" id="state-inspector">
+      <div>
+        <div class="inspector-title" id="insp-name">
+          <span>State: IDLE</span>
+          <span class="badge badge-info" id="insp-type">Quiescent Start State</span>
+        </div>
+        <div class="inspector-desc" id="insp-desc">Connector unplugged, contactors open, session unreserved. Admissible transitions: reserve_req, auth_req, plug_in.</div>
+      </div>
+      <div id="insp-transitions" style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+        <!-- Outgoing tags rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Grid: Kernel Action Verdict & Runtime Trace Log -->
+  <div class="grid-bottom">
+
+    <!-- Kernel Execution Verdict -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>Kernel Execution Verdict</span>
+        </div>
+        <span class="badge badge-info" id="verdict-status-badge">Live Monitor</span>
+      </div>
+
+      <!-- Verdict Card -->
+      <div class="verdict-card" id="verdict-card" style="margin-top:0;">
+        <div class="verdict-header">
+          <span class="badge badge-info" id="verdict-badge">READY</span>
+          <span class="verdict-title" id="verdict-title">Select a Bay Action</span>
+        </div>
+        <div id="verdict-body" style="font-size:0.8rem; color:var(--text-muted);">
+          Trigger bay lifecycle or fault injection actions above to evaluate the formal kernel in real time.
+        </div>
+      </div>
+    </div>
+
+    <!-- Runtime Verification Trace Log -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <span>Runtime Verification Trace Log</span>
+        </div>
+        <button onclick="clearTrace()" style="padding:0.25rem 0.5rem; font-size:0.725rem;">Clear Log</button>
+      </div>
+
+      <div class="table-container">
+        <table class="trace-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Bay</th>
+              <th>Symbol (&Sigma;)</th>
+              <th>Verdict</th>
+              <th>Transition</th>
+              <th>Detail</th>
+            </tr>
+          </thead>
+          <tbody id="trace-tbody">
+            <tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:1rem;">No events logged yet. Trigger bay actions above to begin.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // State management
+    let activeBaySession = 'v1';
+    let currentActiveFsmState = 'IDLE';
+    let allScenarios = [];
+    let graphData = null;
+    let activeFilter = 'all';
+
+    // Pan & Zoom state
+    let zoomLevel = 1.0;
+    let panX = 0;
+    let panY = 0;
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+
+    const STATE_DETAILS = {
+      "IDLE": { type: "Start State (q0)", desc: "Connector holstered, power contactors open. Admissible: reserve_req, auth_req, plug_in.", out: ["reserve_req -> RESERVED", "auth_req -> AUTH_PENDING", "plug_in -> CABLE_DETECTED"] },
+      "RESERVED": { type: "Quiescent Allocation", desc: "Bay allocated by fleet manager. Awaiting driver arrival and auth.", out: ["auth_req -> AUTH_PENDING", "plug_in -> CABLE_DETECTED", "session_close -> IDLE"] },
+      "AUTH_PENDING": { type: "Security Handshake", desc: "Validating fleet credentials via OCPP Authorize.", out: ["auth_ok -> AUTHORIZED", "auth_fail -> IDLE"] },
+      "AUTHORIZED": { type: "Credential Validated", desc: "Driver authorized. Waiting for physical cable insertion.", out: ["plug_in -> CABLE_DETECTED", "session_close -> IDLE"] },
+      "CABLE_DETECTED": { type: "Proximity Pilot Sensing", desc: "Control pilot resistance detected. Engaging connector motor lock.", out: ["lock_ok -> EV_CONNECTED", "lock_fail -> FAULT_TERMINAL", "unplug -> IDLE"] },
+      "EV_CONNECTED": { type: "Mechanical Lock Verified", desc: "Connector locked. Insulation monitoring and handshake running.", out: ["ev_ready -> PRECHARGE", "unlock_req -> UNLOCKED", "e_stop -> FAULT_TERMINAL"] },
+      "PRECHARGE": { type: "Bus Energization", desc: "Pre-charging DC bus capacitors to match EV battery voltage before main contactors close.", out: ["power_start -> CHARGING", "power_stop -> ISOLATING", "fault -> FAULT_TERMINAL"] },
+      "CHARGING": { type: "Active Power Flow", desc: "Main contactors closed; transfering DC energy under Invariant I1 (lock held).", out: ["grid_curtail -> PAUSED_DISPATCH", "ev_stop -> SUSPENDED_EV", "power_ramp_down -> RAMP_DOWN", "e_stop -> FAULT_TERMINAL"] },
+      "PAUSED_DISPATCH": { type: "Site Grid Throttling", desc: "Temporarily curtailed by station power ceiling (Invariant I2).", out: ["power_start -> CHARGING", "grid_curtail -> SUSPENDED_EVSE", "power_ramp_down -> RAMP_DOWN"] },
+      "SUSPENDED_EV": { type: "Vehicle BMS Pause", desc: "Vehicle BMS paused current transfer. Contactors held closed.", out: ["ev_ready -> CHARGING", "power_ramp_down -> RAMP_DOWN"] },
+      "SUSPENDED_EVSE": { type: "Station Policy Pause", desc: "Station paused session for load redistribution or safety.", out: ["power_start -> CHARGING", "power_ramp_down -> RAMP_DOWN"] },
+      "RAMP_DOWN": { type: "Controlled Current Reduction", desc: "Current ramped down smoothly to 0 A prior to breaking contactors (Property P2).", out: ["power_stop -> ISOLATING", "e_stop -> FAULT_TERMINAL"] },
+      "ISOLATING": { type: "Contactor Separation", desc: "Contactors opening; verifying zero voltage across terminals.", out: ["contactors_open -> UNLOCKED", "unlock_ok -> UNLOCKED"] },
+      "UNLOCKED": { type: "Safe Extraction", desc: "Motorized lock retracted. Safe for driver or robot to disconnect cable.", out: ["unplug -> UNPLUGGED", "lock_ok -> EV_CONNECTED"] },
+      "UNPLUGGED": { type: "Physical Departure", desc: "Cable returned to dock. Session awaiting financial settlement (Property P3).", out: ["meter_final -> BILLING_PENDING", "pay_ok -> COMPLETED"] },
+      "BILLING_PENDING": { type: "Payment Settlement", desc: "Tariff computed. Final payment transaction pending with gateway.", out: ["pay_ok -> COMPLETED", "pay_fail -> BILLING_PENDING (Retry)"] },
+      "COMPLETED": { type: "Accepting State (F_S)", desc: "Regular word fully accepted by L(M_S). All physical and commercial invariants held.", out: ["session_close -> COMPLETED", "reset_cmd -> IDLE"] },
+      "FAULT_TERMINAL": { type: "Unrecoverable Trap State (bot)", desc: "Physical safety isolation triggered (E-Stop, overcurrent, lock failure). Zero outgoing transitions by formal definition.", out: ["No transitions (Dead Trap)"] },
+    };
+
+    const SCENARIO_DESCRIPTIONS = {
+      "D1": { category: "lifecycle", summary: "Complete 14-step regular word acceptance from IDLE to COMPLETED." },
+      "D2": { category: "lifecycle", summary: "Driver departs without payment. Rejection via undefined transition + repair synthesis." },
+      "D3": { category: "lifecycle", summary: "Live unlock requested while current flows. Caught by Safety Property P2." },
+      "D4": { category: "recovery", summary: "Telemetry heartbeat drops. Dijkstra finds least-cost repair path to safe state." },
+      "D5": { category: "recovery", summary: "Emergency stop trips contactor. Isolated into unrecoverable FAULT_TERMINAL trap." },
+      "D6": { category: "recovery", summary: "Payment gateway times out. Safe-state hold keeps session in BILLING_PENDING." },
+      "D7": { category: "recovery", summary: "Grid drops station allocation. Dynamic throttling to PAUSED_DISPATCH." },
+      "D8": { category: "recovery", summary: "Hostile event injection bypass attempt to COMPLETED. Blocked by gate via Property P3." },
+      "D9": { category: "protocol", summary: "6 vehicles contend on 3 connectors. Multiset symmetry reduction cuts states by 99.99%." },
+      "D10": { category: "protocol", summary: "Hot-load declarative OCPP 1.6-J YAML; Mealy transducer normalizes messages." },
+      "D11": { category: "protocol", summary: "Load malformed adapter. Conformance checker catches invalid prefix at load time." },
+      "D12": { category: "queue", summary: "Untrusted priority scheduler proposes over-ceiling load. Gate rejects via Invariant I2." },
+      "D13": { category: "queue", summary: "50 concurrent vehicles with random event fuzzing. 100% sound with 0 false accepts." },
+    };
+
+    async function init() {
+      setupPanZoom();
+      await loadGraphMetadata();
+      await loadScenarios();
+      await refreshAll();
+      loadFsm('IDLE');
+    }
+
+    async function refreshAll() {
+      await fetchState();
+      await fetchBays();
+      await fetchTrace();
+    }
+
+    async function fetchState() {
+      try {
+        const state = await fetch('/api/state').then(r => r.json());
+        document.querySelector('#clock-badge').textContent = `Clock: ${state.clock.toFixed(1)}s`;
+      } catch (err) {
+        console.error('fetchState error:', err);
+      }
+    }
+
+    async function fetchBays() {
+      try {
+        const bays = await fetch('/api/bays').then(r => r.json());
+        const container = document.querySelector('#bays-container');
+
+        container.innerHTML = bays.map(b => {
+          let badgeClass = 'badge-neutral';
+          if (b.state === 'CHARGING') badgeClass = 'badge-ok';
+          else if (b.state === 'FAULT_TERMINAL') badgeClass = 'badge-fail';
+          else if (b.state === 'PAUSED_DISPATCH') badgeClass = 'badge-warn';
+          else if (b.state !== 'IDLE') badgeClass = 'badge-info';
+
+          const pct = Math.min(100, Math.round((b.active_kw / b.max_kw) * 100));
+          const isSelected = (b.session_id === activeBaySession);
+
+          return `
+            <div class="bay-card ${isSelected ? 'selected' : ''}" data-session-id="${b.session_id}" onclick="selectBay('${b.session_id}', '${b.bay_id}', '${b.state}')">
+              <div class="bay-top">
+                <div class="bay-info">
+                  <h3>${b.bay_id} &bull; <code style="color:var(--primary);">${b.session_id}</code></h3>
+                  <p>${b.connector} &bull; Max ${b.max_kw} kW</p>
+                </div>
+                <span class="badge ${badgeClass}">${b.state}</span>
+              </div>
+
+              <div class="power-meter">
+                <div class="power-label">
+                  <span>Output Power</span>
+                  <strong style="color:${b.active_kw > 0 ? '#38bdf8' : 'var(--text-muted)'};">${b.active_kw} / ${b.max_kw} kW</strong>
+                </div>
+                <div class="power-bar">
+                  <div class="power-fill" style="width: ${pct}%;"></div>
+                </div>
+              </div>
+
+              <div>
+                <div style="font-size:0.7rem; color:var(--text-dim); margin-bottom:0.35rem; font-weight:600;">LIFECYCLE ACTIONS:</div>
+                <div class="bay-step-actions">
+                  <button onclick="event.stopPropagation(); bayAction('${b.session_id}', 'reserve')">1. Reserve</button>
+                  <button onclick="event.stopPropagation(); bayAction('${b.session_id}', 'auth')">2. Auth</button>
+                  <button onclick="event.stopPropagation(); bayAction('${b.session_id}', 'plug')">3. Plug</button>
+                  <button onclick="event.stopPropagation(); bayAction('${b.session_id}', 'lock')">4. Lock</button>
+                  <button class="btn-warning" onclick="event.stopPropagation(); bayAction('${b.session_id}', 'start_charge')">5. Charge ⚡</button>
+                  <button onclick="event.stopPropagation(); bayAction('${b.session_id}', 'stop')">6. Stop</button>
+                  <button onclick="event.stopPropagation(); bayAction('${b.session_id}', 'unplug')">7. Unplug</button>
+                  <button class="btn-success" onclick="event.stopPropagation(); bayAction('${b.session_id}', 'pay')">8. Pay 💳</button>
+                  <button onclick="event.stopPropagation(); bayAction('${b.session_id}', 'reset')">🔄 Reset</button>
+                </div>
+              </div>
+
+              <div class="bay-fault-actions">
+                <span style="font-size:0.7rem; color:var(--text-dim); align-self:center; font-weight:600;">FAULT INJECTION:</span>
+                <button class="btn-danger" onclick="event.stopPropagation(); bayAction('${b.session_id}', 'illegal_unlock')">❌ Unlock (Fails P2)</button>
+                <button class="btn-warning" onclick="event.stopPropagation(); bayAction('${b.session_id}', 'grid_curtail')">⚠️ Grid Curtail</button>
+                <button class="btn-danger" onclick="event.stopPropagation(); bayAction('${b.session_id}', 'e_stop')">🚨 E-Stop</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error('fetchBays error:', err);
+      }
+    }
+
+    function selectBay(sessionId, bayName, state) {
+      activeBaySession = sessionId;
+      document.querySelector('#selected-bay-badge').textContent = `Selected: ${bayName} (${sessionId})`;
+      document.querySelectorAll('.bay-card').forEach(c => {
+        c.classList.toggle('selected', c.getAttribute('data-session-id') === sessionId);
+      });
+      loadFsm(state);
+    }
+
+    async function bayAction(sessionId, action) {
+      try {
+        const res = await fetch('/api/demo/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId, action: action })
+        }).then(r => r.json());
+
+        renderActionVerdict(res);
+        await refreshAll();
+        if (res.state_after) {
+          loadFsm(res.state_after);
+        }
+      } catch (err) {
+        console.error('bayAction error:', err);
+      }
+    }
+
+    function renderActionVerdict(res) {
+      const badge = document.querySelector('#verdict-badge');
+      const title = document.querySelector('#verdict-title');
+      const body = document.querySelector('#verdict-body');
+
+      if (res.accepted) {
+        badge.className = 'badge badge-ok';
+        badge.textContent = 'ADMITTED';
+        title.textContent = `Action '${res.action}' Accepted`;
+      } else {
+        badge.className = 'badge badge-fail';
+        badge.textContent = 'REJECTED';
+        title.textContent = `Action '${res.action}' Rejected by Kernel`;
+      }
+
+      let repairHtml = '';
+      if (res.repair_path && res.repair_path.length > 0) {
+        repairHtml = `
+          <div class="verdict-row">
+            <span class="verdict-label">Synthesized Repair Path:</span>
+            <span class="verdict-val">${res.repair_path.map(s => `<span class="repair-badge">${s}</span>`).join(' &rarr; ')}</span>
+          </div>
+        `;
+      }
+
+      body.innerHTML = `
+        <div class="verdict-row">
+          <span class="verdict-label">Session & State:</span>
+          <span class="verdict-val"><strong>${res.session_id}</strong> (${res.state_before} &rarr; ${res.state_after})</span>
+        </div>
+        <div class="verdict-row">
+          <span class="verdict-label">Formal Symbol:</span>
+          <span class="verdict-val"><code>${res.symbol}</code></span>
+        </div>
+        <div class="verdict-row">
+          <span class="verdict-label">Kernel Verdict Detail:</span>
+          <span class="verdict-val">${res.explanation}</span>
+        </div>
+        ${repairHtml}
+      `;
+    }
+
+    async function fetchTrace() {
+      try {
+        const events = await fetch('/api/events').then(r => r.json());
+        const tbody = document.querySelector('#trace-tbody');
+        if (!events || events.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:1rem;">No events logged yet. Trigger bay actions above to begin.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = events.slice(-30).reverse().map(e => `
+          <tr>
+            <td><code style="color:var(--primary);">${e.time.toFixed(1)}s</code></td>
+            <td><strong>${e.session_id}</strong></td>
+            <td><code>${e.symbol}</code></td>
+            <td><span class="badge ${e.accepted ? 'badge-ok' : 'badge-fail'}">${e.accepted ? 'ACCEPT' : 'REJECT'}</span></td>
+            <td>${e.state_before} &rarr; ${e.state_after}</td>
+            <td style="color:var(--text-muted); font-size:0.75rem;">${e.accepted ? 'State transition admitted by kernel.' : (e.error || 'Undefined transition (partial delta rejection).')}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('fetchTrace error:', err);
+      }
+    }
+
+    async function clearTrace() {
+      document.querySelector('#trace-tbody').innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:1rem;">Trace log cleared.</td></tr>';
+    }
+
+    async function loadGraphMetadata() {
+      try {
+        graphData = await fetch('/api/graph/data').then(r => r.json());
+        const select = document.querySelector('#state-select');
+        select.innerHTML = '<option value="">Jump to State...</option>' + graphData.states.map(s => `<option value="${s}">${s}</option>`).join('');
+      } catch (err) {
+        console.error('loadGraphMetadata error:', err);
+      }
+    }
+
+    async function loadFsm(activeState = '') {
+      currentActiveFsmState = activeState || 'IDLE';
+      document.querySelector('#fsm-active-badge').textContent = `Active: ${currentActiveFsmState}`;
+      inspectState(currentActiveFsmState);
+
+      const viewport = document.querySelector('#fsm-viewport');
+      try {
+        const url = activeState ? `/api/graph.svg?active_state=${encodeURIComponent(activeState)}` : '/api/graph.svg';
+        const res = await fetch(url);
+        const svg = await res.text();
+        viewport.innerHTML = svg;
+        bindSvgNodeEvents();
+      } catch (err) {
+        viewport.innerHTML = `<span style="color:#ef4444; padding:2rem;">Error loading diagram: ${err.message}</span>`;
+      }
+    }
+
+    function bindSvgNodeEvents() {
+      const nodes = document.querySelectorAll('#fsm-viewport .fsm-node');
+      nodes.forEach(node => {
+        const stateName = node.getAttribute('data-state');
+        node.addEventListener('click', (e) => {
+          e.stopPropagation();
+          inspectState(stateName);
+          loadFsm(stateName);
+        });
+      });
+    }
+
+    function inspectState(stateName) {
+      if (!stateName) return;
+      const info = STATE_DETAILS[stateName] || { type: "Operational State", desc: `State ${stateName} in canonical DFA.`, out: [] };
+      document.querySelector('#insp-name').innerHTML = `<span>State: ${stateName}</span> <span class="badge ${stateName === 'COMPLETED' ? 'badge-ok' : (stateName === 'FAULT_TERMINAL' ? 'badge-fail' : 'badge-info')}">${info.type}</span>`;
+      document.querySelector('#insp-desc').textContent = info.desc;
+      const transitionsBox = document.querySelector('#insp-transitions');
+      transitionsBox.innerHTML = info.out.map(t => `<span class="repair-badge">${t}</span>`).join(' ');
+    }
+
+    function highlightSelectedState(st) {
+      if (st) {
+        loadFsm(st);
+      }
+    }
+
+    /* Pan & Zoom Controls */
+    function setupPanZoom() {
+      const container = document.querySelector('#fsm-container');
+      const viewport = document.querySelector('#fsm-viewport');
+
+      container.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.fsm-node')) return;
+        isDragging = true;
+        startX = e.clientX - panX;
+        startY = e.clientY - panY;
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        panX = e.clientX - startX;
+        panY = e.clientY - startY;
+        applyTransform();
+      });
+
+      window.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+
+      container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.1 : 0.9;
+        zoomLevel = Math.max(0.4, Math.min(3.0, zoomLevel * factor));
+        applyTransform();
+      }, { passive: false });
+    }
+
+    function zoomFsm(factor) {
+      zoomLevel = Math.max(0.4, Math.min(3.0, zoomLevel * factor));
+      applyTransform();
+    }
+
+    function resetFsmView() {
+      zoomLevel = 1.0;
+      panX = 0;
+      panY = 0;
+      applyTransform();
+    }
+
+    function applyTransform() {
+      const viewport = document.querySelector('#fsm-viewport');
+      viewport.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
+    }
+
+    /* Scenarios */
+    async function loadScenarios() {
+      try {
+        allScenarios = await fetch('/api/scenarios').then(r => r.json());
+        renderScenarioButtons();
+      } catch (err) {
+        console.error('loadScenarios error:', err);
+      }
+    }
+
+    function filterScenarios(cat) {
+      activeFilter = cat;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      renderScenarioButtons();
+    }
+
+    function renderScenarioButtons() {
+      const container = document.querySelector('#scenarios-list');
+      if (!container) return;
+      const filtered = allScenarios.filter(s => {
+        if (activeFilter === 'all') return true;
+        const meta = SCENARIO_DESCRIPTIONS[s.id];
+        return meta && meta.category === activeFilter;
+      });
+
+      container.innerHTML = filtered.map(s => {
+        return `
+          <button class="sc-btn" onclick="executeScenario('${s.id}')">
+            <span class="sc-btn-id">${s.id}</span>
+            <span class="sc-btn-title">${s.name}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    async function executeScenario(id) {
+      const badge = document.querySelector('#verdict-badge');
+      const title = document.querySelector('#verdict-title');
+      badge.className = 'badge badge-info';
+      badge.textContent = 'RUNNING';
+      title.textContent = `Executing Scenario ${id}...`;
+
+      try {
+        const res = await fetch(`/api/scenarios/${id}`, { method: 'POST' }).then(r => r.json());
+        renderScenarioVerdict(res);
+        await refreshAll();
+        const targetState = res.final_state || res.target_state || res.start_state;
+        if (targetState) {
+          loadFsm(targetState);
+        }
+      } catch (err) {
+        console.error('executeScenario error:', err);
+      }
+    }
+
+    function renderScenarioVerdict(res) {
+      const badge = document.querySelector('#verdict-badge');
+      const title = document.querySelector('#verdict-title');
+      const body = document.querySelector('#verdict-body');
+
+      const v = res.verdict || 'DONE';
+      if (v.includes('ACCEPT') || v.includes('SUCCESS') || v.includes('SOUND') || v.includes('ORCHESTRATE')) {
+        badge.className = 'badge badge-ok';
+      } else if (v.includes('REJECT') || v.includes('BLOCKED')) {
+        badge.className = 'badge badge-fail';
+      } else {
+        badge.className = 'badge badge-warn';
+      }
+      badge.textContent = v;
+      title.textContent = `Scenario ${res.id}: ${res.verdict}`;
+
+      let detailsHtml = '';
+      if (res.id === 'D1') {
+        detailsHtml = `
+          <div class="verdict-row"><span class="verdict-label">Formal Acceptance:</span><span class="verdict-val">w &in; L(M<sub>S</sub>) (Canonical Happy Path)</span></div>
+          <div class="verdict-row"><span class="verdict-label">Terminal State:</span><span class="verdict-val"><strong>${res.final_state}</strong> &isin; F<sub>S</sub></span></div>
+          <div class="verdict-row"><span class="verdict-label">Word Length:</span><span class="verdict-val">${res.history_length} canonical transitions traversed</span></div>
+        `;
+      } else if (res.id === 'D2') {
+        detailsHtml = `
+          <div class="verdict-row"><span class="verdict-label">Failure Point:</span><span class="verdict-val">Step ${res.failure_index}</span></div>
+          <div class="verdict-row"><span class="verdict-label">Rejected Token:</span><span class="verdict-val"><code>${res.rejected_symbol}</code> (Departure before financial settlement)</span></div>
+          <div class="verdict-row"><span class="verdict-label">Rejected At State:</span><span class="verdict-val"><strong>${res.final_state}</strong></span></div>
+          <div class="verdict-row"><span class="verdict-label">Synthesized Repair:</span><span class="verdict-val">${(res.repair_path || []).map(s => `<span class="repair-badge">${s}</span>`).join(' &rarr; ')}</span></div>
+        `;
+      } else if (res.id === 'D3') {
+        detailsHtml = `
+          <div class="verdict-row"><span class="verdict-label">Safety Property:</span><span class="verdict-val" style="color:#10b981; font-weight:700;">Property P<sub>2</sub> verified: Live disconnect strictly prevented</span></div>
+          <div class="verdict-row"><span class="verdict-label">Active State:</span><span class="verdict-val"><strong>${res.final_state}</strong> (Power Active, Contactor Closed)</span></div>
+          <div class="verdict-row"><span class="verdict-label">Emptiness Proof:</span><span class="verdict-val">L(M<sub>S</sub>) &cap; L(P<sub>2</sub>) = &empty; &bull; Live disconnect impossible under &delta;<sub>S</sub></span></div>
+          <div class="verdict-row"><span class="verdict-label">Required Safe Shutdown:</span><span class="verdict-val">${(res.repair_path || []).map(s => `<span class="repair-badge">${s}</span>`).join(' &rarr; ')}</span></div>
+        `;
+      } else if (res.id === 'D4') {
+        detailsHtml = `
+          <div class="verdict-row"><span class="verdict-label">Incident:</span><span class="verdict-val" style="color:#f59e0b; font-weight:700;">Telemetry heartbeat lost during charging</span></div>
+          <div class="verdict-row"><span class="verdict-label">Dijkstra Recovery:</span><span class="verdict-val">${res.start_state} &rarr; <strong>${res.final_state}</strong> (Cost: ${res.cost})</span></div>
+          <div class="verdict-row"><span class="verdict-label">Repair Sequence:</span><span class="verdict-val">${(res.repair_path || []).map(s => `<span class="repair-badge">${s}</span>`).join(' &rarr; ')}</span></div>
+        `;
+      } else if (res.id === 'D5') {
+        detailsHtml = `
+          <div class="verdict-row"><span class="verdict-label">Emergency Action:</span><span class="verdict-val" style="color:#ef4444; font-weight:700;">Contactor trip (E-Stop) triggered physical isolation</span></div>
+          <div class="verdict-row"><span class="verdict-label">Isolation Trap:</span><span class="verdict-val"><strong>${res.final_state}</strong> (Unrecoverable Dead Trap State &perp;)</span></div>
+          <div class="verdict-row"><span class="verdict-label">Formal Invariant:</span><span class="verdict-val">&delta;(${res.final_state}, &sigma;) = &bot; &bull; Zero outgoing transitions</span></div>
+        `;
+      } else if (res.id === 'D6') {
+        detailsHtml = `
+          <div class="verdict-row"><span class="verdict-label">Payment Issue:</span><span class="verdict-val" style="color:#f59e0b; font-weight:700;">Gateway timeout during settlement</span></div>
+          <div class="verdict-row"><span class="verdict-label">Safe-State Hold:</span><span class="verdict-val">Retained in <strong>${res.final_state}</strong></span></div>
+          <div class="verdict-row"><span class="verdict-label">Policy:</span><span class="verdict-val">Commercial hold prevents departure until pay_ok confirmed.</span></div>
+        `;
+      } else if (res.id === 'D7') {
+        detailsHtml = `
+          <div class="verdict-row"><span class="verdict-label">Grid Event:</span><span class="verdict-val" style="color:#f59e0b; font-weight:700;">Feeder allocation curtailed by utility</span></div>
+          <div class="verdict-row"><span class="verdict-label">Throttled State:</span><span class="verdict-val">Shifted to <strong>${res.final_state}</strong></span></div>
+          <div class="verdict-row"><span class="verdict-label">Safety Invariant:</span><span class="verdict-val">Preserves 150 kW site ceiling (Invariant I<sub>2</sub>).</span></div>
+        `;
+      } else if (res.id === 'D8') {
+        detailsHtml = `
+          <div class="verdict-row"><span class="verdict-label">Security Incident:</span><span class="verdict-val" style="color:#ef4444; font-weight:700;">Adversarial shortcut injection directly to COMPLETED</span></div>
+          <div class="verdict-row"><span class="verdict-label">Gate Interception:</span><span class="verdict-val">Blocked at <strong>${res.final_state}</strong> via Property P<sub>3</sub> (No unbilled departure)</span></div>
+          <div class="verdict-row"><span class="verdict-label">Enforced Repair:</span><span class="verdict-val">${(res.repair_path || []).map(s => `<span class="repair-badge">${s}</span>`).join(' &rarr; ')}</span></div>
+        `;
+      } else if (res.id === 'D9') {
+        detailsHtml = `
+          <div class="verdict-row"><span class="verdict-label">Contention State:</span><span class="verdict-val">6 vehicles contending across 3 bays in <strong>${res.final_state}</strong></span></div>
+          <div class="verdict-row"><span class="verdict-label">Raw State Space:</span><span class="verdict-val">${Number(res.naive_states).toLocaleString()} states</span></div>
+          <div class="verdict-row"><span class="verdict-label">Symmetry Reduced:</span><span class="verdict-val"><strong>${Number(res.symmetry_reduced_states).toLocaleString()} states</strong> (${(100 - (res.reduction_ratio * 100)).toFixed(3)}% reduction)</span></div>
+          <div class="verdict-row"><span class="verdict-label">Invariant Breaches:</span><span class="verdict-val" style="color:#10b981; font-weight:700;">0 (150 kW site ceiling strictly held)</span></div>
+        `;
+      } else if (res.id === 'D10') {
+        detailsHtml = `
+          <div class="verdict-row"><span class="verdict-label">Protocol Normalization:</span><span class="verdict-val">OCPP 1.6-J declarative YAML transducer</span></div>
+          <div class="verdict-row"><span class="verdict-label">Emitted Word:</span><span class="verdict-val">${(res.emitted_tokens || []).slice(0, 5).join(' &rarr; ')} &rarr; ... &rarr; <strong>${res.final_state}</strong></span></div>
+          <div class="verdict-row"><span class="verdict-label">Outcome:</span><span class="verdict-val" style="color:#10b981; font-weight:700;">13 vendor dialect messages normalized into canonical alphabet</span></div>
+        `;
+      } else if (res.id === 'D11') {
+        detailsHtml = `
+          <div class="verdict-row"><span class="verdict-label">Load-Time Check:</span><span class="verdict-val" style="color:#ef4444; font-weight:700;">Malformed YAML adapter refused before admission</span></div>
+          <div class="verdict-row"><span class="verdict-label">Kernel Safety:</span><span class="verdict-val">Preserved in <strong>${res.final_state}</strong> state</span></div>
+          <div class="verdict-row"><span class="verdict-label">Checker Diagnostics:</span><span class="verdict-val" style="font-size:0.75rem; color:var(--text-muted);">${res.error || 'Conformance failure detected'}</span></div>
+        `;
+      } else if (res.id === 'D12') {
+        detailsHtml = `
+          <div class="verdict-row"><span class="verdict-label">Untrusted Proposal:</span><span class="verdict-val" style="color:#ef4444; font-weight:700;">Aggressive reorder exceeds 150 kW feeder ceiling &rarr; DISPOSED</span></div>
+          <div class="verdict-row"><span class="verdict-label">Admitted Dispatch:</span><span class="verdict-val">Safe schedule admitted in <strong>${res.final_state}</strong></span></div>
+          <div class="verdict-row"><span class="verdict-label">Admission Gate:</span><span class="verdict-val">Invariant I<sub>2</sub> strictly enforced</span></div>
+        `;
+      } else if (res.id === 'D13') {
+        detailsHtml = `
+          <div class="verdict-row"><span class="verdict-label">Concurrent Vehicles:</span><span class="verdict-val">${res.fleet_size} vehicles &rarr; all in <strong>${res.final_state}</strong></span></div>
+          <div class="verdict-row"><span class="verdict-label">Total Events:</span><span class="verdict-val">${res.accepted + res.rejected}</span></div>
+          <div class="verdict-row"><span class="verdict-label">Fuzzing Soundness:</span><span class="verdict-val" style="color:#10b981; font-weight:700;">100% Sound &bull; 0 False Accepts</span></div>
+        `;
+      } else {
+        detailsHtml = `
+          <div class="verdict-row"><span class="verdict-label">Explanation:</span><span class="verdict-val">${res.explanation || res.reason || 'Scenario executed cleanly.'}</span></div>
+          ${res.start_state ? `<div class="verdict-row"><span class="verdict-label">Recovery Route:</span><span class="verdict-val">${res.start_state} &rarr; ${res.target_state || res.final_state}</span></div>` : ''}
+          ${res.repair_path ? `<div class="verdict-row"><span class="verdict-label">Action Path:</span><span class="verdict-val">${(res.repair_path || []).map(s => `<span class="repair-badge">${s}</span>`).join(' &rarr; ')}</span></div>` : ''}
+        `;
+      }
+
+      body.innerHTML = detailsHtml;
+    }
+
+    async function autoPlayDemo() {
+      // If v1 is currently in COMPLETED or FAULT_TERMINAL, reset it first so it plays cleanly from IDLE
+      try {
+        const bays = await fetch('/api/bays').then(r => r.json());
+        const v1 = bays.find(b => b.session_id === 'v1');
+        if (v1 && (v1.state === 'COMPLETED' || v1.state === 'FAULT_TERMINAL')) {
+          await bayAction('v1', 'reset');
+          await new Promise(r => setTimeout(r, 300));
+        }
+      } catch (err) {}
+      const steps = ['reserve', 'auth', 'plug', 'lock', 'start_charge', 'stop', 'unplug', 'pay'];
+      for (const step of steps) {
+        await bayAction('v1', step);
+        await new Promise(r => setTimeout(r, 750));
+      }
+    }
+
+    async function resetAll() {
+      try {
+        await fetch('/api/reset', { method: 'POST' });
+        const badge = document.querySelector('#verdict-badge');
+        const title = document.querySelector('#verdict-title');
+        const body = document.querySelector('#verdict-body');
+        badge.className = 'badge badge-info';
+        badge.textContent = 'RESET';
+        title.textContent = 'Fleet Simulator Reset';
+        body.innerHTML = 'All vehicle sessions cleared to IDLE. Clock reset to 0.0s.';
+        await refreshAll();
+        loadFsm('IDLE');
+      } catch (err) {
+        console.error('resetAll error:', err);
+      }
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>

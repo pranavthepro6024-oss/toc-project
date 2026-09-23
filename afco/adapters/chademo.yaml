@@ -2,19 +2,19 @@ adapter:
   vendor: CHAdeMO
   version: "1.0"
   initial_state: Idle
-states: [Idle, Connected, Charging, Stopping, Billing]
+states: [Idle, VehicleDetected, Locked, Precharging, Charging, Stopping, Isolating, Unlocked, Unplugged, Billing, Completed]
 transitions:
-  - {from: Idle, event: VehicleDetected, to: Connected, emit: plug_in}
-  - {from: Connected, event: AuthorizationAccepted, to: Connected, emit: auth_ok}
-  - {from: Connected, event: ConnectorLocked, to: Connected, emit: lock_ok}
-  - {from: Connected, event: Ready, to: Connected, emit: ev_ready}
-  - {from: Connected, event: VoltageMatched, to: Charging, emit: precharge_ok}
-  - {from: Charging, event: CurrentEnabled, to: Charging, emit: power_start}
+  - {from: Idle, event: VehicleDetected, to: VehicleDetected, emit: plug_in}
+  - {from: VehicleDetected, event: ConnectorLocked, to: Locked, emit: lock_ok}
+  - {from: Locked, event: Ready, to: Precharging, emit: ev_ready}
+  - {from: Precharging, event: VoltageMatched, to: Precharging, emit: precharge_ok}
+  - {from: Precharging, event: CurrentEnabled, to: Charging, emit: power_start}
   - {from: Charging, event: PeriodicMeter, to: Charging, emit: meter_tick}
   - {from: Charging, event: StopRequest, to: Stopping, emit: power_ramp_down}
-  - {from: Stopping, event: CurrentZero, to: Stopping, emit: power_stop}
-  - {from: Stopping, event: ContactorsOpen, to: Stopping, emit: contactors_open}
-  - {from: Stopping, event: UnlockComplete, to: Stopping, emit: unlock_ok}
-  - {from: Stopping, event: CableRemoved, to: Billing, emit: unplug}
-  - {from: Billing, event: MeterFinal, to: Billing, emit: meter_final}
-  - {from: Billing, event: PaymentOk, to: Idle, emit: pay_ok}
+  - {from: Stopping, event: CurrentZero, to: Isolating, emit: power_stop}
+  - {from: Isolating, event: ContactorsOpen, to: Unlocked, emit: contactors_open}
+  - {from: Unlocked, event: CableRemoved, to: Unplugged, emit: unplug}
+  - {from: Unplugged, event: MeterFinal, to: Billing, emit: meter_final}
+  - {from: Billing, event: PaymentOk, to: Completed, emit: pay_ok}
+  - {from: Completed, event: SessionClosed, to: Completed, emit: session_close}
+  - {from: Completed, event: Reset, to: Idle, emit: reset_cmd}

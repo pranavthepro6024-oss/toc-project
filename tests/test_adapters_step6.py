@@ -17,7 +17,7 @@ def test_dynamic_hot_load_translates_without_kernel_changes():
         "MeterFinal", "PaymentAccepted",
     ])
     assert result.success
-    assert result.output_word[:2] == ["auth_req", "plug_in"]
+    assert result.output_word[:3] == ["auth_req", "auth_ok", "plug_in"]
     assert result.output_word[-1] == "pay_ok"
 
 

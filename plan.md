@@ -168,12 +168,12 @@ To guarantee rigorous execution and eliminate scope drift, the project is broken
 | **Step 0** | **Skeleton & Dependencies** | `pyproject.toml`, `requirements.txt`, `README.md`, package structure. | Test discovery succeeds via `pytest`. | **COMPLETED** |
 | **Step 1** | **Core Automata Primitives** | `dfa.py`, `nfa.py`, `subset.py`, `reachability.py`, `minimize.py`, `product.py`, `transducer.py`, `render.py`. | 4 textbook DFAs pass; `hypothesis` confirms minimization preserves language. (12/12 tests) | **COMPLETED** |
 | **Step 2** | **Session Automaton ($M_S$)** | 18 states, 28 symbols, full $\delta_S$ table, session instance tracking. | Scenarios **D1** (Happy Path) and **D2** (Billing-Skip Rejection) pass. | **COMPLETED** |
-| **Step 3** | **Verification Layer** | Safety properties $P_1$–$P_5$ as forbidden DFAs, product emptiness check, counterexample extraction. | Scenario **D3** (Unlock while charging caught via $P_2$) passes. | *Pending* |
-| **Step 4** | **Station Composition** | Shared resource $R$, lazy product $M_S^N \times R$, multiset symmetry reduction, invariants $I_1$–$I_5$. | Scenario **D9** (6 bays / 3 connectors / power cap) passes without state explosion. | *Pending* |
-| **Step 5** | **Recovery Engine** | Safe state set $\mathcal{S}$, domain cost model, Dijkstra shortest path $\rho$, verification gate. | Scenarios **D4**–**D8** pass; hostile bypass (D8) rejected. | *Pending* |
-| **Step 6** | **Protocol Adapters** | Mealy transducers, declarative YAML parser, totality/range/prefix conformance checker. | Scenarios **D10** (Dynamic hot-load) and **D11** (Malformed YAML rejected) pass. | *Pending* |
-| **Step 7** | **Queuing Automata** | Bounded counter DFA ($K+1$), Pumping Lemma adversary demo, PDA for nested holds, optimizer admission gate. | Pumping lemma game proves non-regularity; Scenario **D12** (Unsafe reorder rejected) passes. | *Pending* |
-| **Step 8** | **Simulator & Live UI** | Discrete-event clock loop, FastAPI web console, live Graphviz SVG rendering, $10^5$-event fuzzing. | Scenario **D13** (Full fleet stress test) runnable from UI with zero false accepts. | *Pending* |
+| **Step 3** | **Verification Layer** | Safety properties $P_1$–$P_5$ as forbidden DFAs, product emptiness check, counterexample extraction. | Scenario **D3** (Unlock while charging caught via $P_2$) passes. | **COMPLETED** |
+| **Step 4** | **Station Composition** | Shared resource $R$, lazy product $M_S^N \times R$, multiset symmetry reduction, invariants $I_1$–$I_5$. | Scenario **D9** (6 bays / 3 connectors / power cap) passes without state explosion. | **COMPLETED** |
+| **Step 5** | **Recovery Engine** | Safe state set $\mathcal{S}$, domain cost model, Dijkstra shortest path $\rho$, verification gate. | Scenarios **D4**–**D8** pass; hostile bypass (D8) rejected. | **COMPLETED** |
+| **Step 6** | **Protocol Adapters** | Mealy transducers, declarative YAML parser, totality/range/prefix conformance checker. | Scenarios **D10** (Dynamic hot-load) and **D11** (Malformed YAML rejected) pass. | **COMPLETED** |
+| **Step 7** | **Queuing Automata** | Bounded counter DFA ($K+1$), Pumping Lemma adversary demo, PDA for nested holds, optimizer admission gate. | Pumping lemma game proves non-regularity; Scenario **D12** (Unsafe reorder rejected) passes. | **COMPLETED** |
+| **Step 8** | **Simulator & Live UI** | Discrete-event clock loop, FastAPI web console, live Graphviz SVG rendering, $10^5$-event fuzzing. | Scenario **D13** (Full fleet stress test) runnable from UI with zero false accepts. | **COMPLETED** |
 
 ---
 

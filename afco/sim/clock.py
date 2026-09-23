@@ -37,3 +37,6 @@ class DiscreteEventClock:
         if until is not None: self.now = max(self.now, float(until))
         return processed
     def clear(self) -> None: self._queue.clear()
+    def reset(self, start_time: float = 0.0) -> None:
+        if start_time < 0: raise ValueError("start_time must be non-negative")
+        self.now = float(start_time); self._sequence = count(); self._queue.clear(); self.processed = 0

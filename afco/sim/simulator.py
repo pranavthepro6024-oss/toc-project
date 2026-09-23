@@ -37,7 +37,7 @@ class FleetSimulator:
         self.clock.run(until=until, max_events=max_events); accepted = sum(event.accepted for event in self.events)
         return SimulationResult(tuple(self.events), accepted, len(self.events) - accepted, {key: value.current_state for key, value in self.sessions.items()})
     def reset(self) -> None:
-        self.clock.clear(); self.events.clear(); self.sessions.clear()
+        self.clock.reset(); self.events.clear(); self.sessions.clear()
 
 def fuzz_soundness(*, trials: int = 100_000, seed: int = 0) -> dict[str, int | bool]:
     """Inject random symbols and assert undefined transitions are side-effect free."""

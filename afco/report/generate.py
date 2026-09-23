@@ -59,7 +59,7 @@ PATENT_CLAIMS: dict[str, dict[str, tuple[str, ...]]] = {
     },
     "claim_2_adaptive_safe_recovery": {
         "modules": ("afco/recovery/engine.py", "afco/recovery/cost.py"),
-        "tests": ("tests/test_step7_queue_optimizer.py",),
+        "tests": ("tests/test_recovery/test_step5_recovery.py",),
     },
     "claim_5_declarative_protocol_normalization": {
         "modules": ("afco/adapters/loader.py", "afco/adapters/conformance.py"),

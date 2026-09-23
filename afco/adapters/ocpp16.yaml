@@ -2,20 +2,21 @@ adapter:
   vendor: OCPP-1.6J
   version: "1.0"
   initial_state: Available
-states: [Available, Preparing, Charging, Finishing, Billing]
+states: [Available, Authorizing, Authorized, PluggedIn, Locked, Precharging, Charging, Stopping, Isolating, Unlocked, Unplugged, Billing, Completed]
 transitions:
-  - {from: Available, event: Authorize, to: Preparing, emit: auth_req}
-  - {from: Preparing, event: AuthorizationAccepted, to: Preparing, emit: auth_ok}
-  - {from: Preparing, event: CablePlugged, to: Preparing, emit: plug_in}
-  - {from: Preparing, event: CableLocked, to: Preparing, emit: lock_ok}
-  - {from: Preparing, event: EvReady, to: Preparing, emit: ev_ready}
-  - {from: Preparing, event: PrechargeComplete, to: Charging, emit: precharge_ok}
-  - {from: Charging, event: StartTransaction, to: Charging, emit: power_start}
+  - {from: Available, event: Authorize, to: Authorizing, emit: auth_req}
+  - {from: Authorizing, event: AuthorizationAccepted, to: Authorized, emit: auth_ok}
+  - {from: Authorized, event: CablePlugged, to: PluggedIn, emit: plug_in}
+  - {from: PluggedIn, event: CableLocked, to: Locked, emit: lock_ok}
+  - {from: Locked, event: EvReady, to: Precharging, emit: ev_ready}
+  - {from: Precharging, event: PrechargeComplete, to: Precharging, emit: precharge_ok}
+  - {from: Precharging, event: StartTransaction, to: Charging, emit: power_start}
   - {from: Charging, event: MeterValues, to: Charging, emit: meter_tick}
-  - {from: Charging, event: StopTransaction, to: Finishing, emit: power_ramp_down}
-  - {from: Finishing, event: PowerStopped, to: Finishing, emit: power_stop}
-  - {from: Finishing, event: ContactorsOpen, to: Billing, emit: contactors_open}
-  - {from: Billing, event: Unplugged, to: Billing, emit: unplug}
-  - {from: Billing, event: MeterFinal, to: Billing, emit: meter_final}
-  - {from: Billing, event: PaymentAccepted, to: Available, emit: pay_ok}
-  - {from: Available, event: SessionClosed, to: Available, emit: session_close}
+  - {from: Charging, event: StopTransaction, to: Stopping, emit: power_ramp_down}
+  - {from: Stopping, event: PowerStopped, to: Isolating, emit: power_stop}
+  - {from: Isolating, event: ContactorsOpen, to: Unlocked, emit: contactors_open}
+  - {from: Unlocked, event: Unplugged, to: Unplugged, emit: unplug}
+  - {from: Unplugged, event: MeterFinal, to: Billing, emit: meter_final}
+  - {from: Billing, event: PaymentAccepted, to: Completed, emit: pay_ok}
+  - {from: Completed, event: SessionClosed, to: Completed, emit: session_close}
+  - {from: Completed, event: Reset, to: Available, emit: reset_cmd}
